@@ -1,0 +1,8 @@
+{
+  "mongoURI": "mongodb://localhost:27017/email-generator",
+  "jwtSecret": "mysecrettoken",
+  "recaptcha": {
+    "siteKey": "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI",
+    "secretKey": "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+  }
+} 
