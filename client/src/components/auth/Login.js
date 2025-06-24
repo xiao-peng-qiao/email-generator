@@ -1,17 +1,20 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { Link, Redirect } from 'react-router-dom';
-import { Form, Button, Card, Container } from 'react-bootstrap';
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
+// import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import AuthContext from '../../context/auth/authContext';
 import AlertContext from '../../context/alert/alertContext';
 
-const Login = () => {
+const Login = (props) => {
   const authContext = useContext(AuthContext);
   const alertContext = useContext(AlertContext);
-  const { executeRecaptcha } = useGoogleReCaptcha();
+  // const { executeRecaptcha } = useGoogleReCaptcha();
 
   const { login, error, clearErrors, isAuthenticated } = authContext;
   const { setAlert } = alertContext;
+
+  // 添加人机验证状态
+  const [isHuman, setIsHuman] = useState(false);
 
   useEffect(() => {
     if (error) {
@@ -31,21 +34,30 @@ const Login = () => {
   const onChange = e =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
+  // 人机验证状态变更
+  const handleHumanCheck = () => {
+    setIsHuman(!isHuman);
+  };
+
   const onSubmit = async e => {
     e.preventDefault();
     
-    // 执行reCAPTCHA
-    if (!executeRecaptcha) {
-      setAlert('reCAPTCHA尚未准备好', 'danger');
+    // 检查人机验证
+    if (!isHuman) {
+      setAlert('请完成人机验证', 'danger');
       return;
     }
     
-    try {
-      const recaptchaToken = await executeRecaptcha('login');
-      login({ email, password, recaptchaToken });
-    } catch (error) {
-      console.error('reCAPTCHA执行失败:', error);
-      setAlert('人机验证失败，请刷新页面重试', 'danger');
+    if (!email || !password) {
+      setAlert('请填写所有字段', 'danger');
+    } else {
+      try {
+        // 移除reCAPTCHA验证，直接登录
+        login({ email, password });
+      } catch (error) {
+        console.error('登录失败:', error);
+        setAlert('登录失败，请重试', 'danger');
+      }
     }
   };
 
@@ -55,47 +67,71 @@ const Login = () => {
   }
 
   return (
-    <Container className="py-3">
-      <Card className="shadow-sm">
-        <Card.Body>
-          <h2 className="text-center mb-4">登录账号</h2>
-          <Form onSubmit={onSubmit}>
-            <Form.Group className="mb-3">
-              <Form.Label>电子邮箱</Form.Label>
-              <Form.Control
-                type="email"
-                placeholder="请输入您的邮箱"
-                name="email"
-                value={email}
-                onChange={onChange}
-                required
-              />
-            </Form.Group>
+    <Container className="py-5">
+      <div className="d-flex justify-content-center">
+        <Card className="shadow-sm" style={{ width: '380px' }}>
+          <Card.Body className="p-4">
+            <h2 className="text-center mb-4">
+              <i className="fas fa-user-circle me-2"></i>用户登录
+            </h2>
 
-            <Form.Group className="mb-4">
-              <Form.Label>密码</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="请输入密码"
-                name="password"
-                value={password}
-                onChange={onChange}
-                required
-              />
-            </Form.Group>
+            <Form onSubmit={onSubmit}>
+              <Form.Group className="mb-3">
+                <Form.Label>电子邮箱</Form.Label>
+                <Form.Control 
+                  type="email" 
+                  placeholder="请输入您的邮箱" 
+                  name="email"
+                  value={email}
+                  onChange={onChange}
+                  required
+                />
+              </Form.Group>
 
-            <div className="d-grid gap-2">
-              <Button variant="primary" type="submit">
-                登录
-              </Button>
-            </div>
-          </Form>
-          
-          <div className="text-center mt-3">
-            没有账号？ <Link to="/register">立即注册</Link>
-          </div>
-        </Card.Body>
-      </Card>
+              <Form.Group className="mb-4">
+                <Form.Label>密码</Form.Label>
+                <Form.Control 
+                  type="password" 
+                  placeholder="请输入您的密码" 
+                  name="password"
+                  value={password}
+                  onChange={onChange}
+                  required
+                  autoComplete="current-password"
+                />
+              </Form.Group>
+
+              {/* 简化版人机验证 */}
+              <div className="mb-4 p-3 border rounded bg-light">
+                <div className="d-flex align-items-center">
+                  <Form.Check 
+                    type="checkbox" 
+                    id="human-check"
+                    checked={isHuman}
+                    onChange={handleHumanCheck}
+                    label="确认您是真人"
+                    className="me-3"
+                  />
+                  <div className="ms-auto">
+                    <i className="fas fa-shield-alt text-primary me-1"></i>
+                    <span className="text-muted small">安全验证</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="d-grid mb-3">
+                <Button variant="primary" type="submit">
+                  <i className="fas fa-sign-in-alt me-2"></i>登录
+                </Button>
+              </div>
+              
+              <p className="text-center mb-0">
+                还没有账号？ <Link to="/register">立即注册</Link>
+              </p>
+            </Form>
+          </Card.Body>
+        </Card>
+      </div>
     </Container>
   );
 };

@@ -1,200 +1,238 @@
 import React, { useState, useContext } from 'react';
-import { Link } from 'react-router-dom';
-import { Container, Card, Button, Form, Row, Col, Alert } from 'react-bootstrap';
+import { Container, Card, Form, Button, Row, Col, InputGroup } from 'react-bootstrap';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
-import { FaCopy, FaCheckCircle } from 'react-icons/fa';
-import axios from 'axios';
+import { toast } from 'react-toastify';
+import EmailContext from '../../context/email/emailContext';
 import AuthContext from '../../context/auth/authContext';
-import AlertContext from '../../context/alert/alertContext';
 
 const EmailGenerator = () => {
+  const emailContext = useContext(EmailContext);
   const authContext = useContext(AuthContext);
-  const alertContext = useContext(AlertContext);
+  const { addEmail } = emailContext;
   const { isAuthenticated } = authContext;
-  const { setAlert } = alertContext;
 
-  const [loading, setLoading] = useState(false);
-  const [generated, setGenerated] = useState(false);
-  const [emailData, setEmailData] = useState(null);
-  const [copied, setCopied] = useState({
-    email: false,
-    password: false
-  });
-  const [selectedProvider, setSelectedProvider] = useState('');
+  const [generatedEmail, setGeneratedEmail] = useState('');
+  const [generatedPassword, setGeneratedPassword] = useState('');
+  const [provider, setProvider] = useState('outlook.com');
+  const [passwordLength, setPasswordLength] = useState(12);
+  const [includeNumbers, setIncludeNumbers] = useState(true);
+  const [includeSymbols, setIncludeSymbols] = useState(true);
+  const [includeUppercase, setIncludeUppercase] = useState(true);
 
-  // 生成随机邮箱
-  const generateEmail = async () => {
-    setLoading(true);
-    try {
-      let url = '/api/emails/random';
-      if (selectedProvider) {
-        url += `?provider=${selectedProvider}`;
-      }
-
-      const res = await axios.get(url);
-      setEmailData(res.data);
-      setGenerated(true);
-      setLoading(false);
-    } catch (err) {
-      setAlert('生成邮箱失败', 'danger');
-      setLoading(false);
+  const generateRandomString = (length) => {
+    const chars = 'abcdefghijklmnopqrstuvwxyz';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    return result;
   };
 
-  // 复制文本
-  const handleCopy = (type) => {
-    setCopied({ ...copied, [type]: true });
-    setTimeout(() => {
-      setCopied({ ...copied, [type]: false });
-    }, 2000);
+  const generateRandomPassword = () => {
+    let chars = 'abcdefghijklmnopqrstuvwxyz';
+    if (includeUppercase) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    if (includeNumbers) chars += '0123456789';
+    if (includeSymbols) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+    let password = '';
+    for (let i = 0; i < passwordLength; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    // 确保包含至少一个数字、符号和大写（如果选择了）
+    if (includeNumbers && !/\d/.test(password)) {
+      const pos = Math.floor(Math.random() * password.length);
+      password = password.substring(0, pos) + Math.floor(Math.random() * 10) + password.substring(pos + 1);
+    }
+
+    if (includeSymbols && !/[!@#$%^&*()_+\-=\[\]{}|;:,.<>\/?]/.test(password)) {
+      const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+      const pos = Math.floor(Math.random() * password.length);
+      password = password.substring(0, pos) + symbols.charAt(Math.floor(Math.random() * symbols.length)) + password.substring(pos + 1);
+    }
+
+    if (includeUppercase && !/[A-Z]/.test(password)) {
+      const pos = Math.floor(Math.random() * password.length);
+      const upperChar = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.charAt(Math.floor(Math.random() * 26));
+      password = password.substring(0, pos) + upperChar + password.substring(pos + 1);
+    }
+
+    return password;
   };
 
-  // 保存到账户
-  const saveToAccount = async () => {
-    if (!isAuthenticated) {
-      setAlert('请先登录后再保存邮箱', 'info');
+  const handleGenerate = () => {
+    const username = generateRandomString(8);
+    const email = `${username}@${provider}`;
+    const password = generateRandomPassword();
+
+    setGeneratedEmail(email);
+    setGeneratedPassword(password);
+  };
+
+  const handleSave = () => {
+    if (!generatedEmail || !generatedPassword) {
+      toast.error('请先生成邮箱和密码');
       return;
     }
 
-    try {
-      const config = {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      };
-
-      const body = {
-        provider: emailData.provider,
-        description: '从生成器创建'
-      };
-
-      await axios.post('/api/emails', body, config);
-      setAlert('邮箱已保存到您的账户', 'success');
-    } catch (err) {
-      setAlert('保存邮箱失败', 'danger');
+    if (!isAuthenticated) {
+      toast.info('请先登录或注册以保存邮箱');
+      return;
     }
+
+    addEmail({
+      email: generatedEmail,
+      password: generatedPassword,
+      provider: provider
+    });
+    
+    toast.success('邮箱已成功保存');
+  };
+
+  const handleCopy = () => {
+    toast.success('已复制到剪贴板');
   };
 
   return (
-    <Container className="py-3">
-      <h1 className="mb-4">临时邮箱生成器</h1>
-
-      <Card className="mb-4">
+    <Container className="py-4" style={{ maxWidth: '700px' }}>
+      <h1 className="text-center mb-4">随机邮箱生成器</h1>
+      
+      <Card className="shadow-sm mb-4">
+        <Card.Header className="bg-light">
+          <h4 className="mb-0"><i className="fas fa-sliders-h me-2"></i>生成选项</h4>
+        </Card.Header>
         <Card.Body>
-          <h3>选择邮箱提供商（可选）</h3>
           <Form>
-            <Form.Group>
-              <Form.Select
-                value={selectedProvider}
-                onChange={(e) => setSelectedProvider(e.target.value)}
-                className="mb-3"
-              >
-                <option value="">随机选择提供商</option>
-                <option value="gmail">Gmail</option>
-                <option value="outlook">Outlook</option>
-                <option value="yahoo">Yahoo</option>
-                <option value="qq">QQ邮箱</option>
-                <option value="163">163邮箱</option>
-                <option value="126">126邮箱</option>
-                <option value="hotmail">Hotmail</option>
-              </Form.Select>
-            </Form.Group>
-
-            <div className="d-grid">
-              <Button
-                variant="primary"
-                onClick={generateEmail}
-                disabled={loading}
-              >
-                {loading ? '生成中...' : '生成随机邮箱'}
-              </Button>
-            </div>
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>邮箱提供商</Form.Label>
+                  <Form.Select 
+                    value={provider}
+                    onChange={(e) => setProvider(e.target.value)}
+                  >
+                    <option value="outlook.com">Outlook.com</option>
+                    <option value="gmail.com">Gmail.com</option>
+                    <option value="yahoo.com">Yahoo.com</option>
+                    <option value="protonmail.com">ProtonMail.com</option>
+                    <option value="zoho.com">Zoho.com</option>
+                    <option value="yandex.com">Yandex.com</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>密码长度: {passwordLength}</Form.Label>
+                  <Form.Range 
+                    min={8}
+                    max={24}
+                    value={passwordLength}
+                    onChange={(e) => setPasswordLength(parseInt(e.target.value))}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+            
+            <Row>
+              <Col md={12}>
+                <div className="d-flex flex-wrap">
+                  <Form.Check 
+                    type="checkbox"
+                    label="包含数字"
+                    className="me-4 mb-2"
+                    checked={includeNumbers}
+                    onChange={(e) => setIncludeNumbers(e.target.checked)}
+                  />
+                  <Form.Check 
+                    type="checkbox"
+                    label="包含特殊字符"
+                    className="me-4 mb-2"
+                    checked={includeSymbols}
+                    onChange={(e) => setIncludeSymbols(e.target.checked)}
+                  />
+                  <Form.Check 
+                    type="checkbox"
+                    label="包含大写字母"
+                    className="me-4 mb-2"
+                    checked={includeUppercase}
+                    onChange={(e) => setIncludeUppercase(e.target.checked)}
+                  />
+                </div>
+              </Col>
+            </Row>
           </Form>
+          
+          <div className="text-center mt-4">
+            <Button variant="primary" size="lg" onClick={handleGenerate}>
+              <i className="fas fa-bolt me-2"></i>生成随机邮箱
+            </Button>
+          </div>
         </Card.Body>
       </Card>
 
-      {generated && emailData && (
-        <Card className="mb-4">
-          <Card.Header>
-            <h3>您的临时邮箱已生成</h3>
+      {(generatedEmail || generatedPassword) && (
+        <Card className="shadow-sm">
+          <Card.Header className="bg-light">
+            <h4 className="mb-0"><i className="fas fa-check-circle me-2"></i>生成结果</h4>
           </Card.Header>
           <Card.Body>
-            <Row className="mb-3">
-              <Col sm={4}>
-                <strong>邮箱地址:</strong>
+            <Row className="mb-4">
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label>随机邮箱地址</Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type="text"
+                      value={generatedEmail}
+                      readOnly
+                    />
+                    <CopyToClipboard text={generatedEmail} onCopy={handleCopy}>
+                      <Button variant="outline-primary">
+                        <i className="far fa-copy me-1"></i>复制
+                      </Button>
+                    </CopyToClipboard>
+                  </InputGroup>
+                </Form.Group>
               </Col>
-              <Col sm={6}>{emailData.email}</Col>
-              <Col sm={2} className="text-end">
-                <CopyToClipboard
-                  text={emailData.email}
-                  onCopy={() => handleCopy('email')}
-                >
-                  <Button variant="outline-primary" size="sm">
-                    {copied.email ? <FaCheckCircle /> : <FaCopy />}
-                  </Button>
-                </CopyToClipboard>
+            </Row>
+            <Row className="mb-4">
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label>随机密码</Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type="text"
+                      value={generatedPassword}
+                      readOnly
+                    />
+                    <CopyToClipboard text={generatedPassword} onCopy={handleCopy}>
+                      <Button variant="outline-primary">
+                        <i className="far fa-copy me-1"></i>复制
+                      </Button>
+                    </CopyToClipboard>
+                  </InputGroup>
+                </Form.Group>
               </Col>
             </Row>
 
-            <Row className="mb-3">
-              <Col sm={4}>
-                <strong>密码:</strong>
-              </Col>
-              <Col sm={6}>{emailData.password}</Col>
-              <Col sm={2} className="text-end">
-                <CopyToClipboard
-                  text={emailData.password}
-                  onCopy={() => handleCopy('password')}
-                >
-                  <Button variant="outline-primary" size="sm">
-                    {copied.password ? <FaCheckCircle /> : <FaCopy />}
-                  </Button>
-                </CopyToClipboard>
-              </Col>
-            </Row>
-
-            <Row className="mb-3">
-              <Col sm={4}>
-                <strong>提供商:</strong>
-              </Col>
-              <Col sm={8}>{emailData.provider}</Col>
-            </Row>
-
-            <Alert variant="warning">
-              <strong>注意:</strong> 此邮箱仅用于临时用途，请不要在重要账号使用。除非您登录并保存，否则页面刷新后信息将丢失。
-            </Alert>
-
-            <div className="d-grid gap-2">
+            <div className="d-flex justify-content-center">
               {isAuthenticated ? (
-                <Button variant="success" onClick={saveToAccount}>
-                  保存到我的账户
+                <Button 
+                  variant="success" 
+                  onClick={handleSave}
+                  className="px-4"
+                >
+                  <i className="fas fa-save me-2"></i>保存此邮箱
                 </Button>
               ) : (
-                <Button as={Link} to="/login" variant="success">
-                  登录后保存
-                </Button>
+                <Card.Text className="text-center">
+                  <i className="fas fa-info-circle me-1"></i>
+                  <strong>登录</strong>后可保存生成的邮箱
+                </Card.Text>
               )}
-              <Button variant="primary" onClick={generateEmail}>
-                重新生成
-              </Button>
             </div>
           </Card.Body>
         </Card>
-      )}
-
-      {!isAuthenticated && (
-        <Alert variant="info">
-          <h4>想要保存邮箱信息？</h4>
-          <p>
-            登录后您可以保存生成的邮箱信息，随时查看和管理您的所有邮箱。
-          </p>
-          <Button as={Link} to="/register" variant="primary" className="me-2">
-            立即注册
-          </Button>
-          <Button as={Link} to="/login" variant="outline-primary">
-            登录
-          </Button>
-        </Alert>
       )}
     </Container>
   );

@@ -32,13 +32,10 @@ const Landing = () => {
               </Button>
             </div>
           </Col>
-          <Col md={6} className="text-center">
-            <img
-              src="https://via.placeholder.com/500x300?text=邮箱生成器"
-              alt="邮箱生成器"
-              className="img-fluid rounded"
-              style={{ maxWidth: '100%' }}
-            />
+          <Col md={6} className="text-center d-flex justify-content-center align-items-center">
+            <div className="text-primary" style={{ fontSize: '8rem' }}>
+              <i className="fas fa-envelope-open-text"></i>
+            </div>
           </Col>
         </Row>
 

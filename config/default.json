@@ -1,5 +1,5 @@
 {
-  "mongoURI": "mongodb://localhost:27017/email-generator",
+  "mongoURI": "mongodb://127.0.0.1:27017/email-generator",
   "jwtSecret": "mysecrettoken",
   "recaptcha": {
     "siteKey": "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI",

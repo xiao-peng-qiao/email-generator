@@ -2,6 +2,22 @@
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
+    <!-- 首先加载process垫片 -->
+    <script src="%PUBLIC_URL%/process-direct-shim.js"></script>
+    <!-- 解决process问题的简单脚本 -->
+    <script>
+      // 定义全局process对象
+      window.process = window.process || {
+        env: { 
+          NODE_ENV: 'development'
+        },
+        browser: true,
+        nextTick: function(cb) { setTimeout(cb, 0); }
+      };
+      
+      // 定义global
+      window.global = window;
+    </script>
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#17a2b8" />

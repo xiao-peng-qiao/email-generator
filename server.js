@@ -11,10 +11,13 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// 设置strictQuery为false
+mongoose.set('strictQuery', false);
+
 // 连接MongoDB数据库
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/email-generator', {
+    await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/email-generator', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
@@ -42,5 +45,5 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // 设置端口并启动服务器
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`服务器运行在端口 ${PORT}`)); 

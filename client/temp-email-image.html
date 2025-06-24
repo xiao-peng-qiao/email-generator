@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邮箱生成器图片</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .container {
+            width: 500px;
+            height: 300px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        h1 {
+            color: #17a2b8;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        .email-icon {
+            font-size: 80px;
+            color: #17a2b8;
+            margin-bottom: 20px;
+        }
+        .decoration {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #17a2b8, #20c997);
+            opacity: 0.1;
+        }
+        .decoration:nth-child(1) {
+            top: -20px;
+            left: -20px;
+            width: 120px;
+            height: 120px;
+        }
+        .decoration:nth-child(2) {
+            bottom: -30px;
+            right: -30px;
+            width: 150px;
+            height: 150px;
+        }
+        .email-address {
+            font-size: 1.2em;
+            background-color: #f0f8ff;
+            padding: 10px 20px;
+            border-radius: 30px;
+            color: #333;
+            border: 1px dashed #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="decoration"></div>
+        <div class="decoration"></div>
+        <div class="email-icon">✉️</div>
+        <h1>邮箱生成器</h1>
+        <div class="email-address">example@random-mail.com</div>
+    </div>
+</body>
+</html> 

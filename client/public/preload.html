@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Preloading...</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';">
+    <script>
+      // 创建process对象
+      window.process = {
+        env: {
+          NODE_ENV: 'development'
+        },
+        nextTick: function(cb) { setTimeout(cb, 0); },
+        browser: true,
+        version: '',
+        versions: {},
+        platform: 'browser',
+        binding: function(name) {
+          if (name === 'util') return { isBuffer: function() { return false; } };
+          return {};
+        }
+      };
+
+      // 等待1秒后重定向到主页
+      setTimeout(function() {
+        window.location.href = "index.html";
+      }, 100);
+    </script>
+  </head>
+  <body>
+    <div style="text-align: center; margin-top: 40vh;">
+      <h2>正在加载邮箱生成器...</h2>
+    </div>
+  </body>
+</html> 

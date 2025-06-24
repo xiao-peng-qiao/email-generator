@@ -3,14 +3,16 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { check, validationResult } = require('express-validator');
-const Recaptcha = require('recaptcha-v3');
 const User = require('../models/User');
 
-// 初始化reCAPTCHA
-const recaptcha = new Recaptcha({
-  siteKey: process.env.RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // 使用测试密钥
-  secretKey: process.env.RECAPTCHA_SECRET_KEY || '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe' // 使用测试密钥
-});
+// 我们暂时注释掉reCAPTCHA部分，以便能够启动服务器
+// const Recaptcha = require('recaptcha-v3');
+// 
+// // 初始化reCAPTCHA
+// const recaptcha = new Recaptcha({
+//   siteKey: process.env.RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // 使用测试密钥
+//   secretKey: process.env.RECAPTCHA_SECRET_KEY || '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe' // 使用测试密钥
+// });
 
 // @route   POST api/users
 // @desc    注册用户
@@ -21,7 +23,8 @@ router.post(
     check('name', '请输入姓名').not().isEmpty(),
     check('email', '请输入有效的邮箱').isEmail(),
     check('password', '请输入至少6个字符的密码').isLength({ min: 6 }),
-    check('recaptchaToken', '人机验证令牌是必需的').not().isEmpty()
+    // 暂时移除recaptcha检查
+    // check('recaptchaToken', '人机验证令牌是必需的').not().isEmpty()
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -29,15 +32,17 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password, recaptchaToken } = req.body;
+    const { name, email, password } = req.body;
+    // 去掉recaptchaToken
 
     try {
-      // 验证reCAPTCHA
-      const recaptchaResult = await recaptcha.validate(recaptchaToken);
-      
-      if (!recaptchaResult.success || recaptchaResult.score < 0.5) {
-        return res.status(400).json({ msg: '人机验证失败，请重试' });
-      }
+      // 暂时移除reCAPTCHA验证
+      // // 验证reCAPTCHA
+      // const recaptchaResult = await recaptcha.validate(recaptchaToken);
+      // 
+      // if (!recaptchaResult.success || recaptchaResult.score < 0.5) {
+      //   return res.status(400).json({ msg: '人机验证失败，请重试' });
+      // }
 
       // 检查用户是否已存在
       let user = await User.findOne({ email });

@@ -1,6 +1,7 @@
 import React, { Fragment, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
+// 暂时注释掉 reCAPTCHA 相关导入
+// import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -18,6 +19,14 @@ import AuthState from './context/auth/AuthState';
 import EmailState from './context/email/EmailState';
 import AlertState from './context/alert/AlertState';
 
+// 修复process问题，不引用外部模块
+if (typeof window !== 'undefined' && (typeof process === 'undefined' || !process.env)) {
+  window.process = {
+    env: { NODE_ENV: 'development' },
+    browser: true
+  };
+}
+
 if (localStorage.token) {
   setAuthToken(localStorage.token);
 }
@@ -31,30 +40,26 @@ const App = () => {
   }, []);
 
   return (
-    <GoogleReCaptchaProvider
-      reCaptchaKey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-      language="zh-CN"
-    >
-      <AuthState>
-        <EmailState>
-          <AlertState>
-            <Router>
-              <Fragment>
-                <Navbar />
-                <ToastContainer position="top-right" autoClose={3000} />
-                <div className="main-content">
-                  <Switch>
-                    <Route exact path="/" component={Landing} />
-                    <Route component={Routes} />
-                  </Switch>
-                </div>
-                <Footer />
-              </Fragment>
-            </Router>
-          </AlertState>
-        </EmailState>
-      </AuthState>
-    </GoogleReCaptchaProvider>
+    // 移除GoogleReCaptchaProvider
+    <AuthState>
+      <EmailState>
+        <AlertState>
+          <Router>
+            <Fragment>
+              <Navbar />
+              <ToastContainer position="top-right" autoClose={3000} />
+              <div className="main-content">
+                <Switch>
+                  <Route exact path="/" component={Landing} />
+                  <Route component={Routes} />
+                </Switch>
+              </div>
+              <Footer />
+            </Fragment>
+          </Router>
+        </AlertState>
+      </EmailState>
+    </AuthState>
   );
 };
 
